@@ -1,9 +1,17 @@
+
+Motivation for creating this Modelio Docker Image
+=================================================
+After a recent upgrade to Redhat Enterprise Linux 7, I found that I was no
+longer able to run my favourite UML modelling tool, Modelio.  the GTK libraries
+appear not to be compatible.  So I decided to attempt to run Modelio inside a Docker image, based on a Linux distribution that is supported.  I did so and it works well.
+
+
 Building Modelio Docker Image
 =============================
 
 Copy RPM files to this directory
 --------------------------------
-Building the Docker image required the Modelio and ArchiMate RPMs to be available at build time.
+Building the Docker image require the Modelio and ArchiMate RPMs to be available at build time.
 At the time of writing, the files were:
 
 modelio-open-source3.8-3.8.1.el7.x86_64.rpm
@@ -18,6 +26,12 @@ modelio-archimate3.8-3.8.1.noarch.rpm
 modelio-open-source3.8-3.8.1.el7.x86_64.rpm
 modelio.sh 
 
+It is quite likely that a newer version will be available at the time of reading
+this, which should be downloaded from the Modelio web site. Then edit the RPM
+file names in the Docker file and rebuild the images, as below.
+
+Naturally I have specifically not included the RPMs in this repository.
+ 
 
 Build the Modelio image
 -----------------------
@@ -34,24 +48,19 @@ A brief breakdown of the scripts is given below:
 sudo docker run -ti --rm -e DISPLAY=$DISPLAY \
     --mount type=bind,source=/etc/machine-id,target=/etc/machine-id \
     --mount type=bind,source=/tmp/.X11-unix,target=/tmp/.X11-unix \
-    --mount type=bind,source=/home/ig43/.Xauthority,target=${HOME}/.Xauthority \
-    --mount type=bind,source=/home/ig43/modelio-projects/workspace,target=/home/developer \
+    --mount type=bind,source=${HOME}/modelio-projects/workspace,target=/home/developer \
     --name modelio \
     --net=host \
     --user $(id -u):$(id -g) \
     -e HOME=/home/developer \
-    modelio \
-    "$@"
+    -w /home/developer \
+    modelio
 
-All the DISPLAY, X11, machine-id and Xauthority stuff is to allow the container to render to
+All the DISPLAY, X11 and machine-id stuff is to allow the container to render to
 the host display - worth noting for future reference, as it took a bit of trial
 and error to find the right formula.
 
-The default user inside the container is 'developer' and is mapped to my own
-user and group ids. This will need changing for other users, in both the
-Dockerfile and run-script.
+The default user inside the container is 'developer' and is mapped to the
+session user and group ids.
 
-The internal directory /home/developer is mapped to the host director
-/home/ig43, but should be modified to the user's own home directory (or wherever
-is suitable).
-
+The internal directory /home/developer is mapped to the host user's home directory, but could be mapped to any specific directory on the host system. 
